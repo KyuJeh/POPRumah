@@ -29,8 +29,8 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:0 
 input[type=text],input[type=number]{width:100%;font-family:inherit;font-size:16px;font-weight:600;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;outline:none;transition:border-color .25s;-webkit-appearance:none;appearance:none}
 input:focus{outline:none;box-shadow:none;border-color:var(--line)}
 input::placeholder{color:transparent}
-.sk{display:flex;gap:8px;align-items:stretch}.sk input{flex:1}
-.cam{flex:none;width:50px;border:1px solid var(--line);background:var(--bg);color:var(--tx);border-radius:12px;display:grid;place-items:center}
+.sk{position:relative}.sk input{padding-right:52px}
+.cam{position:absolute;right:4px;top:0;bottom:0;margin:auto 0;width:42px;height:42px;border:0;background:none;color:var(--ac);border-radius:10px;display:grid;place-items:center}
 .row{display:flex;gap:10px;margin-bottom:12px}.row>div{flex:1;min-width:0}
 .chk{display:flex;align-items:center;gap:10px;font-weight:700;margin:2px 0 14px;cursor:pointer;user-select:none}
 .chk input{display:none}
@@ -96,10 +96,10 @@ input::placeholder{color:transparent}
 <div class="card">
   <div class="row">
     <div><label class="f">SKU</label><div class="sk"><input type="text" id="sku" maxlength="7" autocomplete="off" placeholder=" "><button class="cam" id="camBtn" aria-label="Scan SKU"><svg class="i" viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg></button></div></div>
-    <div><label class="f">HARGA</label><input type="text" id="harga" inputmode="numeric" maxlength="7" autocomplete="off" placeholder=" "></div>
+    <div><label class="f">HARGA</label><input type="text" id="harga" inputmode="numeric" maxlength="9" autocomplete="off" placeholder=" "></div>
   </div>
   <label class="chk"><input type="checkbox" id="best"><span class="box"><svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>Best Price</label>
-  <div id="lamaWrap" style="display:none" class="row"><div><label class="f">HARGA LAMA (tampil di atas, dicoret)</label><input type="text" id="lama" inputmode="numeric" maxlength="7" autocomplete="off" placeholder=" "></div></div>
+  <div id="lamaWrap" style="display:none" class="row"><div><label class="f">HARGA LAMA (tampil di atas, dicoret)</label><input type="text" id="lama" inputmode="numeric" maxlength="9" autocomplete="off" placeholder=" "><div id="lamaMsg" style="color:var(--bad);font-size:12px;font-weight:700;margin-top:4px"></div></div></div>
   <button class="pri" id="save">Simpan</button>
 </div>
 
@@ -152,21 +152,31 @@ function render(){
   $('#pages').innerHTML=h;fit();
 }
 addEventListener('resize',fit);
-function reset(){editId=null;$('#sku').value='';$('#harga').value='';$('#lama').value='';$('#best').checked=false;$('#lamaWrap').style.display='none';$('#mode').textContent='TAMBAH POP';$('#save').textContent='Simpan'}
-['#harga','#lama'].forEach(id=>$(id).addEventListener('input',e=>{const v=e.target.value.replace(/\D/g,'').slice(0,7);if(v!==e.target.value)e.target.value=v}));
+function reset(){editId=null;$('#sku').value='';$('#harga').value='';$('#lama').value='';$('#best').checked=false;$('#lamaWrap').style.display='none';$('#lamaMsg').textContent='';$('#lama').style.borderColor='';$('#mode').textContent='TAMBAH POP';$('#save').textContent='Simpan'}
+const fmt=v=>String(v).replace(/\D/g,'').slice(0,7).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const num=id=>Number($(id).value.replace(/\./g,''))||0;
+/* harga lama wajib lebih tinggi dari harga baru */
+function chkLama(){
+  const bad=$('#best').checked&&$('#lama').value!==''&&num('#lama')<=num('#harga');
+  $('#lama').style.borderColor=bad?'var(--bad)':'';
+  $('#lamaMsg').textContent=bad?'Harga lama harus lebih tinggi dari harga baru':'';
+  return !bad;
+}
+['#harga','#lama'].forEach(id=>$(id).addEventListener('input',e=>{e.target.value=fmt(e.target.value);chkLama()}));
 $('#sku').addEventListener('input',e=>{e.target.value=e.target.value.slice(0,7)});
-$('#best').onchange=e=>{$('#lamaWrap').style.display=e.target.checked?'flex':'none'};
+$('#best').onchange=e=>{$('#lamaWrap').style.display=e.target.checked?'flex':'none';chkLama()};
 $('#save').onclick=()=>{
-  const sku=$('#sku').value.trim(),h=$('#harga').value,best=$('#best').checked,lama=$('#lama').value;
+  const sku=$('#sku').value.trim(),h=$('#harga').value.replace(/\./g,''),best=$('#best').checked,lama=$('#lama').value.replace(/\./g,'');
   if(!sku||h===''){toast('Isi SKU dan harga');return}
   if(best&&lama===''){toast('Isi harga lama');return}
+  if(best&&Number(lama)<=Number(h)){chkLama();toast('Harga lama harus lebih tinggi dari harga baru');return}
   const rec={sku:sku.slice(0,7),harga:Number(h),best,lama:best?Number(lama):null};
   if(editId){const i=data.findIndex(d=>d.id===editId);data[i]={...data[i],...rec}}else data.push({id:Date.now()+Math.random(),...rec});
   store();reset();render();toast('Tersimpan');
 };
 $('#list').onclick=e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.e){const d=data.find(x=>String(x.id)===b.dataset.e);editId=d.id;$('#sku').value=d.sku;$('#harga').value=d.harga;$('#best').checked=d.best;$('#lamaWrap').style.display=d.best?'flex':'none';$('#lama').value=d.lama||'';$('#mode').textContent='EDIT POP';$('#save').textContent='Perbarui';$('#sku').scrollIntoView({behavior:'smooth',block:'center'})}
+  if(b.dataset.e){const d=data.find(x=>String(x.id)===b.dataset.e);editId=d.id;$('#sku').value=d.sku;$('#harga').value=fmt(d.harga);$('#best').checked=d.best;$('#lamaWrap').style.display=d.best?'flex':'none';$('#lama').value=d.lama?fmt(d.lama):'';chkLama();$('#mode').textContent='EDIT POP';$('#save').textContent='Perbarui';$('#sku').scrollIntoView({behavior:'smooth',block:'center'})}
   if(b.dataset.d&&arm(b,'d'+b.dataset.d)){data=data.filter(x=>String(x.id)!==b.dataset.d);store();reset();render();toast('Terhapus')}
 };
 $('#clear').onclick=e=>{if(data.length&&arm(e.currentTarget,'all')){data=[];store();reset();render();toast('Semua terhapus')}};
