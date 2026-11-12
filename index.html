@@ -221,40 +221,58 @@ async function exportXlsx(){
   if(!native&&!dl){toast('Fitur simpan file tidak aktif di tampilan ini. Buka lewat link Claude.');return}
   if(!window.ExcelJS){toast('Pustaka Excel belum termuat, cek koneksi');return}
   const wb=new ExcelJS.Workbook();
+  wb.creator='POP OFFERBIN by GABS';
   const ws=wb.addWorksheet('POP',{pageSetup:{paperSize:9,orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,margins:{left:.3,right:.3,top:.3,bottom:.3,header:0,footer:0}}});
-  for(let c=1;c<=35;c++)ws.getColumn(c).width=(c%12===0)?2:4.3;
+  /* 3 POP per baris: tiap POP 7 kolom + 1 kolom jarak. Tanpa gabung sel kecuali kotak harga lama (2 sel) */
+  for(let c=1;c<=23;c++)ws.getColumn(c).width=(c%8===0)?2:6.4;
   const pages=Math.max(1,Math.ceil(data.length/9));
   const OR={style:'medium',color:{argb:'FFE8A050'}};
   let imgId=null;try{imgId=wb.addImage({base64:LOGO,extension:'png'})}catch(e){}
   const F=(sz,b=true,n='Arial')=>({name:n,size:sz,bold:b});
-  const area=(r1,c1,r2,c2,val,font,al,edges,diag)=>{
-    ws.mergeCells(r1,c1,r2,c2);
-    for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++){
-      const b={};
-      if(r===r1&&edges.includes('t'))b.top=OR;if(r===r2&&edges.includes('b'))b.bottom=OR;
-      if(c===c1&&edges.includes('l'))b.left=OR;if(c===c2&&edges.includes('r'))b.right=OR;
-      ws.getCell(r,c).border=b;
-    }
-    const m=ws.getCell(r1,c1);m.value=val;m.font=font;m.alignment=al;
-    if(diag)m.border={...m.border,diagonal:{up:true,down:false,style:'thin',color:{argb:'FFE02020'}}};
-  };
   const C={horizontal:'center',vertical:'bottom'};
+  const put=(r,c,val,font,al,edges)=>{
+    const cell=ws.getCell(r,c);
+    if(val!==null&&val!==undefined&&val!=='')cell.value=val;
+    if(font)cell.font=font;
+    if(al)cell.alignment=al;
+    const bd={};
+    if(edges.includes('t'))bd.top=OR;
+    if(edges.includes('b'))bd.bottom=OR;
+    if(edges.includes('l'))bd.left=OR;
+    if(edges.includes('r'))bd.right=OR;
+    cell.border=bd;
+    return cell;
+  };
+  const H=[26,24,72,26,12];
   for(let p=0;p<pages;p++){
-    for(let br=0;br<3;br++){const r0=p*36+br*12+1;for(let k=0;k<10;k++)ws.getRow(r0+k).height=14;ws.getRow(r0+10).height=26;ws.getRow(r0+11).height=10}
+    for(let br=0;br<3;br++){const r0=p*15+br*5+1;H.forEach((h,k)=>{ws.getRow(r0+k).height=h})}
     for(let i=0;i<9;i++){
-      const d=data[p*9+i],t=i%3,br=Math.floor(i/3),c0=1+t*12,r0=p*36+br*12+1;
+      const d=data[p*9+i],t=i%3,br=Math.floor(i/3),c0=1+t*8,r0=p*15+br*5+1;
       const s=d?split(d.harga):{big:['','','',''],small:['','','']};
-      area(r0,c0,r0+1,c0+1,'Rp.',F(14),{horizontal:'center',vertical:'top'},'tlr');
       const promo=d&&d.best&&d.lama;
-      area(r0,c0+2,r0+1,c0+5,promo?nf(d.lama):null,F(16,false),{horizontal:'center',vertical:'center'},'t',promo);
-      area(r0,c0+6,r0+1,c0+7,null,F(10),C,'tlr');
-      for(let k=0;k<4;k++)area(r0+2,c0+2*k,r0+9,c0+2*k+1,s.big[k]||null,F(54,false),C,'lrb');
-      for(let j=0;j<3;j++)area(r0+5,c0+8+j,r0+9,c0+8+j,s.small[j]||null,F(24,true,'Arial Black'),C,'tblr');
+      /* baris atas kotak besar: Rp. | harga lama (2 sel) | pojok logo */
+      put(r0,c0,'Rp.',F(14),{horizontal:'center',vertical:'top'},'tlr');
+      put(r0,c0+1,null,null,null,'t');
+      put(r0,c0+2,null,null,null,'t');
+      ws.mergeCells(r0,c0+1,r0,c0+2);
+      if(promo){
+        const oc=ws.getCell(r0,c0+1);
+        oc.value=nf(d.lama);oc.font=F(13,false);oc.alignment={horizontal:'center',vertical:'middle'};
+        oc.border={...oc.border,diagonal:{up:true,down:false,style:'thin',color:{argb:'FFE02020'}}};
+      }
+      put(r0,c0+3,null,null,null,'tlr');
+      /* baris tengah: hanya garis tegak */
+      for(let k=0;k<4;k++)put(r0+1,c0+k,null,null,null,'lr');
+      /* baris angka: 4 kotak besar + 3 kotak kecil */
+      for(let k=0;k<4;k++)put(r0+2,c0+k,s.big[k]||null,F(54,false),C,'lrb');
+      for(let j=0;j<3;j++)put(r0+2,c0+4+j,s.small[j]||null,F(28,true),C,'tblr');
+      /* SKU 7 kotak */
       const sk=d?[...String(d.sku)].slice(0,7):[];
-      for(let k=0;k<7;k++)area(r0+10,c0+k,r0+10,c0+k,sk[k]||null,F(18),{horizontal:'center',vertical:'center'},'tblr');
-      if(imgId!==null)ws.addImage(imgId,{tl:{col:c0+5.72,row:r0-1+0.06},ext:{width:42,height:32}});
+      for(let k=0;k<7;k++)put(r0+3,c0+k,sk[k]||null,F(18),{horizontal:'center',vertical:'middle'},'tblr');
+      /* logo cokelat di pojok kanan atas kotak besar */
+      if(imgId!==null)ws.addImage(imgId,{tl:{col:c0+2.2,row:r0-1+0.08},ext:{width:38,height:29}});
     }
-    if(p<pages-1)ws.getRow((p+1)*36).addPageBreak();
+    if(p<pages-1)ws.getRow((p+1)*15).addPageBreak();
   }
   try{
     const buf=await wb.xlsx.writeBuffer();
