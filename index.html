@@ -275,8 +275,8 @@ async function exportXlsx(){
       /* 7 kotak SKU terpisah di bawah */
       const sk=d?[...String(d.sku)].slice(0,7):[];
       for(let k=0;k<7;k++)put(r0+4,c0+k,sk[k]||null,F(16),{horizontal:'center',vertical:'middle'},'tblr');
-      /* logo cokelat: pojok kanan atas kotak besar */
-      if(logoId!==null)ws.addImage(logoId,{tl:{col:c0+5.9,row:r0-1+0.06},ext:{width:32,height:24}});
+      /* logo cokelat: rapat ke tepi kanan atas kotak besar (jangkar dua sel, tepi kanan = garis kanan kotak) */
+      if(logoId!==null)ws.addImage(logoId,{tl:{nativeCol:c0+5,nativeColOff:190500,nativeRow:r0-1,nativeRowOff:19050},br:{nativeCol:c0+7,nativeColOff:0,nativeRow:r0-1,nativeRowOff:247650},editAs:'oneCell'});
       /* garis merah miring menutupi harga lama */
       if(promo&&lineId!==null)ws.addImage(lineId,{tl:{col:c0+1.04,row:r0-1+0.18},ext:{width:114,height:20}});
     }
