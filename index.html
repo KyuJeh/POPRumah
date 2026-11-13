@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>POP OFFERBIN by GABS</title>
-<link rel="icon" href="icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
@@ -55,9 +54,9 @@ input::placeholder{color:transparent}
 .mini.arm{background:var(--bad);border-color:var(--bad);color:#fff}
 .empty{text-align:center;color:var(--mute);padding:20px 0;font-weight:600}
 .pv{width:100%;overflow:hidden;margin-bottom:10px;border:1px solid var(--line);border-radius:10px;transition:height .35s ease}
-.sheet{--u:8.1mm;--or:#e8a050;width:297mm;height:210mm;background:#fff;color:#000;display:grid;grid-template-columns:repeat(3,99mm);grid-template-rows:repeat(3,70mm);transform-origin:top left;font-family:Arial,Helvetica,sans-serif}
-.cell{position:relative;padding:11mm 5mm 0}
-.big{position:relative;width:calc(11*var(--u));height:46mm}
+.sheet{--u:8.375mm;--or:#e8a050;width:297mm;height:210mm;background:#fff;color:#000;display:grid;grid-template-columns:repeat(3,99mm);grid-template-rows:repeat(3,70mm);transform-origin:top left;font-family:Arial,Helvetica,sans-serif}
+.cell{position:relative;padding:6mm 3.5mm 0}
+.big{position:relative;width:calc(11*var(--u));height:47.5mm}
 .bc{position:absolute;left:0;top:0;width:calc(8*var(--u));height:100%;display:grid;grid-template-columns:repeat(4,1fr);border:.6mm solid var(--or)}
 .bc div{position:relative;display:flex;align-items:flex-end;justify-content:center;font-size:26mm;font-weight:600;line-height:.8;padding-bottom:4.5mm}
 .bc div+div{border-left:.6mm solid var(--or)}
@@ -65,10 +64,10 @@ input::placeholder{color:transparent}
 .sm{position:absolute;right:0;bottom:0;width:calc(3*var(--u));height:54%;display:grid;grid-template-columns:repeat(3,1fr);border:.6mm solid var(--or);border-left:0}
 .sm div{display:flex;align-items:flex-end;justify-content:center;font-size:10.5mm;font-weight:800;line-height:.8;padding-bottom:4mm;-webkit-text-stroke:.35mm #000}
 .sm div+div{border-left:.6mm solid var(--or)}
-.old{position:absolute;left:calc(1.5*var(--u));width:calc(5*var(--u));top:0;height:11mm;text-align:center;font-size:6.5mm;line-height:8mm}
-.old:after{content:"";position:absolute;left:0;right:0;top:4.2mm;border-top:.4mm solid #e02020;transform:rotate(-6deg)}
-.clip{position:absolute;right:0;top:0;width:10mm;height:auto;display:block}
-.skus{display:flex;margin-top:1.8mm;width:max-content}
+.old{position:absolute;left:calc(1.5*var(--u));width:calc(5*var(--u));top:0;height:12mm;text-align:center;font-size:7mm;line-height:9mm}
+.old:after{content:"";position:absolute;left:0;right:0;top:4.6mm;border-top:.4mm solid #e02020;transform:rotate(-6deg)}
+.clip{position:absolute;right:0;top:0;width:11mm;height:auto;display:block}
+.skus{display:flex;margin-top:2mm;width:max-content}
 .skus b{width:var(--u);height:7.5mm;border:.6mm solid var(--or);border-left-width:0;text-align:center;font-size:5.5mm;line-height:6.5mm;font-weight:700}
 .skus b:first-child{border-left-width:.6mm}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ac);color:var(--acx);padding:10px 18px;border-radius:12px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;text-align:center;max-width:90%}
@@ -222,9 +221,9 @@ async function exportXlsx(){
   if(!window.ExcelJS){toast('Pustaka Excel belum termuat, cek koneksi');return}
   const wb=new ExcelJS.Workbook();
   wb.creator='POP OFFERBIN by GABS';
-  const ws=wb.addWorksheet('POP',{pageSetup:{paperSize:9,orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,margins:{left:.3,right:.3,top:.3,bottom:.3,header:0,footer:0}}});
+  const ws=wb.addWorksheet('POP',{pageSetup:{paperSize:9,orientation:'landscape',scale:100,fitToPage:false,horizontalCentered:true,margins:{left:.15,right:.15,top:.2,bottom:.2,header:0,footer:0}}});
   /* Tanpa gabung sel. 1 POP = 11 kolom satuan (kotak besar 2 satuan, kotak kecil & SKU 1 satuan) + 1 kolom jarak */
-  for(let c=1;c<=35;c++)ws.getColumn(c).width=(c%12===0)?4.3:3.7;
+  for(let c=1;c<=35;c++)ws.getColumn(c).width=(c%12===0)?1.7:4.6;
   const pages=Math.max(1,Math.ceil(data.length/9));
   const OR={style:'medium',color:{argb:'FFE8A050'}};
   let logoId=null,lineId=null;
@@ -250,7 +249,7 @@ async function exportXlsx(){
     cell.border=bd;
   };
   /* tinggi baris: atas, tengah, angka, jarak, SKU, spasi antar POP */
-  const H=[28,28,70,8,24,14];
+  const H=[30,30,74.6,5.7,21.3,20];
   for(let p=0;p<pages;p++){
     for(let br=0;br<3;br++){const r0=p*18+br*6+1;H.forEach((h,k)=>{ws.getRow(r0+k).height=h})}
     for(let i=0;i<9;i++){
@@ -261,24 +260,24 @@ async function exportXlsx(){
       const edge=(u,top,bot)=>(top?'t':'')+(bot?'b':'')+(u%2===0?'l':'')+(u===7?'r':'');
       for(let u=0;u<8;u++){
         let val=null,font=null,al=null;
-        if(u===0){val='Rp.';font=F(14);al=CC('top')}
+        if(u===0){val='Rp.';font=F(15);al=CC('top')}
         else if(u===1){al=CC('top')}
-        else if(promo&&u===2){val=nf(d.lama);font=F(15,false);al=CC('middle')}
+        else if(promo&&u===2){val=nf(d.lama);font=F(16,false);al=CC('middle')}
         else if(promo&&u>2&&u<6){al=CC('middle')}
         put(r0,c0+u,val,font,al,edge(u,true,false));
         put(r0+1,c0+u,null,null,null,edge(u,false,false));
         const k=u>>1,dig=s.big[k];
-        put(r0+2,c0+u,u%2===0&&dig?dig:null,F(54,false),dig?CC('bottom'):C,edge(u,false,true));
+        put(r0+2,c0+u,u%2===0&&dig?dig:null,F(60,false),dig?CC('bottom'):C,edge(u,false,true));
       }
       /* 3 kotak kecil (hanya di baris angka) */
-      for(let j=0;j<3;j++)put(r0+2,c0+8+j,s.small[j]||null,F(26,true),C,'tblr');
+      for(let j=0;j<3;j++)put(r0+2,c0+8+j,s.small[j]||null,F(30,true),C,'tblr');
       /* 7 kotak SKU terpisah di bawah */
       const sk=d?[...String(d.sku)].slice(0,7):[];
-      for(let k=0;k<7;k++)put(r0+4,c0+k,sk[k]||null,F(16),{horizontal:'center',vertical:'middle'},'tblr');
+      for(let k=0;k<7;k++)put(r0+4,c0+k,sk[k]||null,F(15),{horizontal:'center',vertical:'middle'},'tblr');
       /* logo cokelat: rapat ke tepi kanan atas kotak besar (jangkar dua sel, tepi kanan = garis kanan kotak) */
       if(logoId!==null)ws.addImage(logoId,{tl:{nativeCol:c0+5,nativeColOff:190500,nativeRow:r0-1,nativeRowOff:19050},br:{nativeCol:c0+7,nativeColOff:0,nativeRow:r0-1,nativeRowOff:247650},editAs:'oneCell'});
       /* garis merah miring menutupi harga lama */
-      if(promo&&lineId!==null)ws.addImage(lineId,{tl:{col:c0+1.04,row:r0-1+0.18},ext:{width:114,height:20}});
+      if(promo&&lineId!==null)ws.addImage(lineId,{tl:{col:c0+1.04,row:r0-1+0.18},ext:{width:120,height:21}});
     }
     if(p<pages-1)ws.getRow((p+1)*18).addPageBreak();
   }
